@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RZFORST — links</title>
+
+<style>
+  /* RESET */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    background: radial-gradient(ellipse at 20% 10%, rgba(10,18,40,0.6), transparent 5%),
+                radial-gradient(ellipse at 90% 90%, rgba(2,8,30,0.6), transparent 10%),
+                #02040a;
+    color:#fff;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  /* Canvas full-screen stars */
+  #starfield{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+
+  /* background photo blurred behind glass */
+  .bg-photo{
+    position:fixed; inset:0; z-index:0; opacity:0.14; filter: blur(12px) saturate(90%) contrast(85%); object-fit:cover; width:100%; height:100%;
+    transform: scale(1.03);
+  }
+
+  /* main container */
+  .wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:36px 18px;
+    position:relative;
+    z-index:3;
+  }
+
+  /* central card column */
+  .card{
+    width:min(420px,94vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    border-radius:22px;
+    padding:28px 20px;
+    box-shadow: 0 10px 40px rgba(3,6,18,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px) saturate(120%);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+    text-align:center;
+  }
+
+  /* profile circle */
+  .pf{
+    width:118px; height:118px; margin:0 auto 14px; border-radius:50%;
+    overflow:hidden; display:grid; place-items:center;
+    border: 3px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 30px rgba(5,10,30,0.6), 0 0 30px rgba(24,54,120,0.12) inset;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  }
+  .pf img{width:100%; height:100%; object-fit:cover; filter:grayscale(100%) contrast(90%) brightness(85%)}
+
+  /* glowing Z and name */
+  .logoZ{
+    font-family: "Times New Roman", serif;
+    font-size:44px; line-height:1; margin-top:8px; color:#dbe9ff;
+    text-shadow: 0 4px 18px rgba(38,116,255,0.12), 0 0 30px rgba(40,120,255,0.08);
+  }
+  .name{
+    margin-top:6px;
+    font-weight:700;
+    letter-spacing:6px;
+    font-size:18px;
+    color:#eaf2ff;
+    text-shadow: 0 3px 12px rgba(26,85,230,0.08);
+    filter: drop-shadow(0 6px 18px rgba(13,57,160,0.08));
+  }
+
+  /* small subtitle line */
+  .sub{
+    margin-top:8px; color:rgba(235,245,255,0.7); font-size:13px; opacity:0.95;
+  }
+
+  /* buttons column */
+  .actions{margin-top:18px; display:flex; flex-direction:column; gap:12px; padding:6px 0 2px;}
+
+  .btn{
+    --bg: linear-gradient(180deg, rgba(110,145,255,0.18), rgba(20,30,80,0.18));
+    display:flex; align-items:center; justify-content:center;
+    gap:10px;
+    padding:12px 18px;
+    border-radius:100px;
+    border:1px solid rgba(255,255,255,0.06);
+    background:var(--bg);
+    color:#eaf2ff;
+    font-weight:700;
+    letter-spacing:0.6px;
+    box-shadow: 0 6px 18px rgba(6,20,60,0.5), inset 0 0 20px rgba(120,160,255,0.03);
+    transition: transform .16s ease, box-shadow .18s ease, background .18s ease;
+    cursor:pointer;
+    backdrop-filter: blur(8px) saturate(120%);
+  }
+
+  .btn:hover, .btn:focus{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(24,70,200,0.28), 0 2px 14px rgba(0,0,0,0.4);
+  }
+
+  .btn:active{ transform: translateY(-1px); }
+
+  .btn .dot{
+    width:42px; height:32px; border-radius:8px;
+    background: linear-gradient(180deg,#2a6bff,#2062ef);
+    display:grid; place-items:center;
+    font-weight:800; color:white; box-shadow: 0 6px 18px rgba(26,85,230,0.18);
+  }
+
+  /* special achievement button style */
+  .btn.ach{
+    background: linear-gradient(180deg, rgba(60,110,255,0.14), rgba(12,18,40,0.12));
+    border: 1px solid rgba(70,120,255,0.12);
+  }
+
+  /* achievements panel */
+  .ach-panel{
+    margin-top:18px;
+    max-height:0;
+    overflow:hidden;
+    transition: max-height .5s cubic-bezier(.2,.9,.2,1), opacity .4s;
+    opacity:0;
+  }
+  .ach-panel.open{ opacity:1; max-height:720px; }
+
+  .ach-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; padding:6px }
+  .ach-item{
+    text-align:right;
+    padding:12px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 8px 24px rgba(2,6,22,0.5);
+  }
+  .ach-item .title{ font-weight:700; color:#f6fbff}
+  .ach-item .when{ font-size:13px; color:var(--muted); margin-top:6px; color:rgba(230,242,255,0.7) }
+
+  /* footer small note */
+  .note{ margin-top:18px; font-size:12px; color:rgba(230,242,255,0.55) }
+
+  /* small responsive tweaks */
+  @media (max-width:420px){
+    .card{ padding:20px; border-radius:18px }
+    .pf{ width:92px; height:92px }
+    .logoZ{ font-size:36px }
+  }
+</style>
+</head>
+<body>
+
+<!-- background photo -->
+<img class="bg-photo" src="profile.jpg" alt="bg">
+
+<!-- star canvas -->
+<canvas id="starfield"></canvas>
+
+<div class="wrap">
+  <div class="card" role="main" aria-label="RZFORST links card">
+    <div class="pf" aria-hidden="true">
+      <img src="profile.jpg" alt="profile">
+    </div>
+
+    <div class="logoZ" aria-hidden="true">𝓩</div>
+    <div class="name">RZFORST</div>
+    <div class="sub">𝓡𝓩𝓕𝓞𝓡𝓢𝓣</div>
+
+    <div class="actions" role="list">
+      <button class="btn" data-href="https://www.instagram.com/x1k94x?igsh=MTF1aG1pOHgyZ3Vmbw%3D%3D&utm_source=qr" aria-label="Instagram" >
+        <div class="dot">ig</div>
+        <div>my Instagram</div>
+      </button>
+
+      <button class="btn" data-href="https://t.me/FIZlP" aria-label="Telegram">
+        <div class="dot">tg</div>
+        <div>my telegram</div>
+      </button>
+
+      <button class="btn" data-href="https://youtube.com/@27lf?si=MKDqeWOzdBdqavcs" aria-label="YouTube">
+        <div class="dot">yt</div>
+        <div>my youtube</div>
+      </button>
+
+      <button class="btn" data-href="https://wa.me/77752523112" aria-label="WhatsApp">
+        <div class="dot">wa</div>
+        <div>my whatsapp</div>
+      </button>
+
+      <button class="btn ach" id="achBtn" aria-expanded="false" aria-controls="achPanel">
+        <div class="dot">★</div>
+        <div>انجازاتي</div>
+      </button>
+    </div>
+
+    <div class="ach-panel" id="achPanel" aria-hidden="true">
+      <div class="ach-list">
+        <div class="ach-item"><div class="title">الإبلاغ المسؤول عن ثغرات</div><div class="when">نشر نتائج الفحص الأمني بشكل مسؤول لمساعدة في إصلاح الثغرات وحماية المجتمع.</div></div>
+        <div class="ach-item"><div class="title">نشر أبحاث أمنية لأغراض دفاعية</div><div class="when">مشاركة طرق وأدوات لتعزيز أمن المواقع والأنظمة.</div></div>
+        <div class="ach-item"><div class="title">تطوير أدوات بايثون أخلاقية</div><div class="when">أدوات برمجية مساعدة للباحثين الأمنيين والمدافعين.</div></div>
+      </div>
+    </div>
+
+    <div class="note">اضغط على أي زر لنسخ الرابط أو فتحه — اضغط مطولًا لنسخ مباشرة على الجوال.</div>
+  </div>
+</div>
+
+<script>
+/* ====== Buttons behavior: copy + open (confirm) ====== */
+document.querySelectorAll('.btn[data-href]').forEach(b=>{
+  b.addEventListener('click', async (e)=>{
+    const url = b.dataset.href;
+    // try to open in new tab after confirm; also copy to clipboard
+    try {
+      const openConfirm = confirm('فتح الرابط في تبويب جديد؟ اضغط إلغاء للنسخ فقط');
+      if(openConfirm){
+        window.open(url, '_blank', 'noopener');
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert('تم نسخ الرابط');
+      }
+    } catch(err){
+      // fallback: copy
+      try{ await navigator.clipboard.writeText(url); alert('تم نسخ الرابط'); } catch(e){ alert(url); }
+    }
+  });
+
+  // on long press (mobile) copy directly
+  let pressTimer;
+  b.addEventListener('touchstart', (ev)=> {
+    pressTimer = setTimeout(async ()=> { try{ await navigator.clipboard.writeText(b.dataset.href); alert('تم نسخ الرابط'); }catch(e){} }, 700);
+  });
+  b.addEventListener('touchend', ()=> clearTimeout(pressTimer));
+});
+
+/* ====== Achievements toggle with smooth open ====== */
+const achBtn = document.getElementById('achBtn');
+const achPanel = document.getElementById('achPanel');
+achBtn.addEventListener('click', ()=>{
+  const open = achPanel.classList.toggle('open');
+  achBtn.setAttribute('aria-expanded', open? 'true':'false');
+  achPanel.setAttribute('aria-hidden', open? 'false':'true');
+  if(open){
+    achPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else {
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+});
+
+/* ====== Slow gentle starfield (canvas) ====== */
+(() => {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = innerWidth;
+  let h = canvas.height = innerHeight;
+  const num = Math.max(40, Math.floor((w*h)/8000)); // number of stars scaled
+  const stars = [];
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+  for(let i=0;i<num;i++){
+    stars.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: rand(0.6,2.2),
+      alpha: rand(0.06,0.25),
+      vx: rand(-0.02,0.02),
+      vy: rand(-0.02,0.02),
+      phase: Math.random()*Math.PI*2
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    // subtle gradient overlay to tint stars blue a bit
+    for(const s of stars){
+      s.x += s.vx;
+      s.y += s.vy;
+      s.phase += 0.002;
+      // wrap
+      if(s.x < -10) s.x = w+10;
+      if(s.x > w+10) s.x = -10;
+      if(s.y < -10) s.y = h+10;
+      if(s.y > h+10) s.y = -10;
+
+      const a = s.alpha + Math.sin(s.phase)*0.04;
+      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r*6);
+      grad.addColorStop(0, `rgba(80,160,255,${a})`);
+      grad.addColorStop(0.4, `rgba(40,90,200,${a*0.45})`);
+      grad.addColorStop(1, `rgba(15,20,40,0)`);
+      ctx.beginPath();
+      ctx.fillStyle = grad;
+      ctx.arc(s.x, s.y, s.r*4, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window.addEventListener('resize', ()=>{
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+    // scale stars array length lightly if resized drastically (keep simple)
+  });
+
+})();
+
+/* ====== accessibility: keyboard support for buttons ====== */
+document.querySelectorAll('.btn').forEach(b=>{
+  b.setAttribute('tabindex','0');
+  b.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+  })
+});
+
+/* ====== smooth scroll for wheel and touch (native scroll-behavior used) ====== */
+/* No extra JS needed; CSS scroll-behavior: smooth; used on body */
+
+/* ====== small UX: on load animation ====== */
+window.addEventListener('load', ()=> {
+  document.querySelector('.card').style.transform = 'translateY(6px)';
+  document.querySelector('.card').style.opacity = '1';
+});
+
+</script>
+</body>
+</html>
